@@ -1,0 +1,83 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'checkstyle'
+    id 'jacoco'
+    id 'pmd'
+    id "com.github.spotbugs" version "5.0.12"
+}
+
+group 'fr.univ_amu'
+version '1.0-SNAPSHOT'
+
+checkstyle {
+    toolVersion = '10.3.4'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation('org.junit.jupiter:junit-jupiter-api:5.9.0',
+            'org.assertj:assertj-core:3.23.1')
+    spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.12.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+}
+
+test {
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+}
+
+test {
+    useJUnitPlatform()
+}
+
+application {
+    mainClass = 'gamePlay.GamePlay'
+}
+
+tasks.named('jar') {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'main-Class': application.mainClass )
+    }
+}
+
+spotbugs {
+    reportLevel = 'high'
+    effort = 'max'
+}
+
+
+spotbugsMain {
+    reports {
+        html {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/main/spotbugs.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+    }
+}
+
+spotbugsTest {
+    reports {
+        html {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/test/spotbugs.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+    }
+}
+
+pmd {
+    consoleOutput = true
+    sourceSets = [sourceSets.main]
+    ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml"]
+}
